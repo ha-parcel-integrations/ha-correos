@@ -25,8 +25,9 @@ its full test suite passes at 98% coverage.
 
 ## Before release
 
-- [ ] `custom_components/correos/brand/icon.png` — still the template
-      placeholder; needs the real Correos brand icon.
+- [ ] `custom_components/correos/brand/icon.png` — currently a stopgap in the
+      Correos brand yellow with a neutral parcel glyph (not the official
+      logomark); swap in the official Correos brand asset before release.
 - [ ] Install in a real Home Assistant and track one real parcel through at
       least two status changes.
 - [ ] Add `correos` to the aggregator's `KNOWN_CARRIERS` and
