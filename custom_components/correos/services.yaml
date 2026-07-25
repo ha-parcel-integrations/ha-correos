@@ -1,0 +1,15 @@
+track_parcel:
+  fields:
+    tracking_code:
+      required: true
+      example: "LX123456789ES"
+      selector:
+        text:
+
+untrack_parcel:
+  fields:
+    tracking_code:
+      required: true
+      example: "LX123456789ES"
+      selector:
+        text:
