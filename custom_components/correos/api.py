@@ -37,6 +37,7 @@ class CorreosApiError(Exception):
     """Raised when a Correos API call returns an unexpected response."""
 
     def __init__(self, detail: str) -> None:
+        """Store the status code that triggered the error."""
         super().__init__(f"Correos API request failed: {detail}")
         self.detail = detail
 

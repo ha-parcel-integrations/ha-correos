@@ -12,7 +12,8 @@ from custom_components.correos.const import (
     DOMAIN,
 )
 
-from .payloads import ACTIVE_CODE, active_sample as _sample
+from .payloads import ACTIVE_CODE
+from .payloads import active_sample as _sample
 
 OTHER_CODE = "EXAMPLE222222"
 
