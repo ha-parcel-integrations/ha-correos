@@ -72,6 +72,32 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
 # only once per HA session instead of on every poll.
 _unmapped_statuses_logged: set[str] = set()
 
+# ``peso``/``largo``/``alto``/``ancho`` appear in the envelope, but their UNITS
+# (grams vs kg, cm vs mm) are unconfirmed, so ``weight`` / ``dimensions`` stay
+# ``None`` rather than publish a wrong-unit value (see TODO.md). The first real
+# parcel that carries them logs once — an open question we want a tester to
+# answer so we can wire them up. See NEW_ISSUE_URL.
+_DIMENSION_KEYS = ("peso", "largo", "alto", "ancho")
+_dimension_fields_logged = False
+
+
+def _note_dimension_fields(raw: dict) -> None:
+    """One-shot: flag weight/size fields whose units we have not confirmed."""
+    global _dimension_fields_logged
+    if _dimension_fields_logged:
+        return
+    present = sorted(k for k in _DIMENSION_KEYS if raw.get(k) not in (None, ""))
+    if not present:
+        return
+    _dimension_fields_logged = True
+    _LOGGER.warning(
+        "Correos payload carries weight/size fields whose units we have not "
+        "confirmed yet (%s), so weight and dimensions are left empty. Please "
+        "help us confirm the units — a diagnostics file is ideal: %s",
+        present,
+        NEW_ISSUE_URL,
+    )
+
 
 def _warn_unmapped_status(code: str) -> None:
     """Log an unmapped carrier status once, with a copy-paste issue link."""
@@ -259,6 +285,7 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     # ``codEnvio`` is the envelope's own tracking number; fall back to the code
     # the coordinator asked for (it injects ``trackingNumber`` on the pending
     # placeholder for a not-yet-scanned parcel).
+    _note_dimension_fields(raw)
     barcode = raw.get("codEnvio") or raw.get("trackingNumber")
 
     # Correos' ``eventos`` run oldest → newest, so the parcel's current state is

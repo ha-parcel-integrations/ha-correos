@@ -15,6 +15,7 @@ from custom_components.correos.const import (
     DOMAIN,
     ParcelStatus,
 )
+from custom_components.correos import parcels as parcels_module
 from custom_components.correos.parcels import (
     apply_delivered_filter,
     build_history,
@@ -72,6 +73,26 @@ def test_unmapped_status_warns_only_once(caplog):
     assert map_parcel_status("ABDUCTED") == ParcelStatus.UNKNOWN
     assert caplog.text.count("ABDUCTED") == 1
     assert "issues/new" in caplog.text
+
+
+def test_dimension_fields_warn_once_about_unconfirmed_units(caplog):
+    """When a payload carries weight/size fields we log once (units are an open
+    question) — keys only, with an issue link."""
+    parcels_module._dimension_fields_logged = False
+    raw = {"codEnvio": "PK123", "eventos": [], "peso": "1500", "largo": "30"}
+    normalize_parcel(raw)
+    normalize_parcel(raw)
+    assert caplog.text.count("units we have not") == 1
+    assert "peso" in caplog.text and "largo" in caplog.text
+    assert "1500" not in caplog.text  # keys only, never values
+    assert "issues/new" in caplog.text
+
+
+def test_dimension_fields_silent_when_absent(caplog):
+    """A payload without weight/size fields logs nothing."""
+    parcels_module._dimension_fields_logged = False
+    normalize_parcel({"codEnvio": "PK123", "eventos": []})
+    assert "units we have not" not in caplog.text
 
 
 # ---------------------------------------------------------------------------
