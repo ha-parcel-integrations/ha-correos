@@ -10,6 +10,18 @@ A custom Home Assistant integration that tracks your [Correos](https://www.corre
 
 Part of the [ha-parcel-integrations](https://github.com/ha-parcel-integrations) family: it publishes the same canonical parcel format, statuses and events as the other carrier integrations, so it plugs straight into the [Parcel Aggregator](https://github.com/ha-parcel-integrations/ha-parcel-aggregator) and cross-carrier automations.
 
+> ### ⚠️ Early release — the mapping is reconstructed, not yet confirmed
+>
+> The endpoint is live and keyless, and unknown or not-yet-scanned numbers are
+> handled correctly. What is **not yet confirmed against a real parcel** is the
+> success payload: the event fields and the status-code catalogue are
+> reconstructed from an older community integration, and only the six happy-path
+> status codes are mapped so far. Anything unmapped reports **`unknown`** (never
+> a wrong status) and logs a one-shot warning with a ready-made issue link —
+> please [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml)
+> so the mapping can be completed. Weight and dimensions are withheld until their
+> units are confirmed.
+
 ## Contents
 
 - [Features](#features)
