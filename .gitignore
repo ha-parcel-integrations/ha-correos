@@ -40,8 +40,6 @@ ENV/
 # Claude Code (local)
 .claude/
 
-# Local-only API / reverse-engineering notes (never published)
-docs/api/
 
 # Per-carrier working notes (local-only)
 TODO.md

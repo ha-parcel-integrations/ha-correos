@@ -22,7 +22,7 @@ you act in one of these areas:
 | consider "fixing" a lint/pattern the skill flags (poll interval, inline client) | *Deliberate skill divergences* |
 | commit, bump, tag, release, or write release notes; add a feature without a test | *Workflow / Commits / Versioning / Testing* |
 
-**API mechanics live in `docs/api/` (local-only, gitignored)** — the keyless
+**API mechanics live in `carrier-research/api/correos/` (private research repo)** — the keyless
 `localizador` endpoint, the `codError`-in-body signalling, the `codEvento` status
 vocabulary and the split `fecEvento`/`horEvento` timestamps. Do not duplicate them
 here.
@@ -40,7 +40,7 @@ here.
 ## Carrier-specific decisions (integration only)
 
 **Status: unverified against a real parcel** — the success payload shape and status
-map are reconstructed from a dormant community integration (see `docs/api/`); treat
+map are reconstructed from a dormant community integration (see `carrier-research/api/correos/`); treat
 them as best-effort until a real ES parcel confirms them (open items flagged
 `TODO(carrier)`).
 
@@ -99,5 +99,6 @@ python -m pytest tests/ --cov=custom_components.correos
 ```
 
 Coverage must stay **above 95%** (silver `test-coverage` rule). Run before
-committing. A code change updates the README + this file + `docs/` in the same
-commit; `docs/api/` is gitignored (local reverse-engineering notes).
+committing. A code change updates the README + this file in the same commit;
+the API reference now lives in the private `carrier-research/api/correos/`,
+not in this repo.
