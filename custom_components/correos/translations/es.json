@@ -1,0 +1,144 @@
+{
+  "title": "Correos",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurar Correos",
+        "description": "El seguimiento de Correos no necesita cuenta ni código postal: el hub se crea al momento. Añade paquetes después mediante las opciones de la integración o el servicio `correos.track_parcel`."
+      }
+    },
+    "abort": {
+      "already_configured": "Correos ya está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Correos",
+        "sections": {
+          "parcels": {
+            "name": "Paquetes",
+            "data": {
+              "add": "Añadir un paquete",
+              "remove": "Eliminar paquetes"
+            },
+            "data_description": {
+              "add": "Introduce un código de seguimiento de Correos para empezar a rastrearlo. Lo encuentras en la confirmación de envío o en el aviso de entrega fallida."
+            }
+          },
+          "delivered": {
+            "name": "Paquetes entregados",
+            "data": {
+              "delivered_filter_type": "Filtrar por",
+              "delivered_filter_amount": "Cantidad"
+            },
+            "data_description": {
+              "delivered_filter_type": "Muestra los paquetes entregados en los últimos X días, o limita a los X más recientes.",
+              "delivered_filter_amount": "Número de días o paquetes a mostrar."
+            }
+          },
+          "history": {
+            "name": "Historial de paquetes",
+            "data": {
+              "include_history": "Incluir historial de estados"
+            },
+            "data_description": {
+              "include_history": "Añade un atributo de historial por paquete con cada actualización de estado (marca de tiempo, estado, texto original). Desactivado por defecto."
+            }
+          },
+          "polling": {
+            "name": "Sondeo",
+            "data": {
+              "refresh_interval": "Actualizar cada"
+            },
+            "data_description": {
+              "refresh_interval": "Con qué frecuencia la integración consulta a Correos las actualizaciones de los paquetes. Un intervalo más lento es más suave con la API de Correos; el valor predeterminado de 30 minutos es suficiente para la mayoría de los paquetes."
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "invalid_tracking_code": "Eso no parece un código de seguimiento de Correos.",
+      "already_tracked": "Ese paquete ya se está rastreando."
+    }
+  },
+  "selector": {
+    "refresh_interval": {
+      "options": {
+        "15": "15 minutos",
+        "30": "30 minutos",
+        "60": "60 minutos",
+        "120": "120 minutos",
+        "240": "240 minutos"
+      }
+    },
+    "delivered_filter_type": {
+      "options": {
+        "days": "Días",
+        "parcels": "Número de paquetes"
+      }
+    }
+  },
+  "services": {
+    "track_parcel": {
+      "name": "Rastrear paquete",
+      "description": "Empieza a rastrear un paquete por su código de seguimiento de Correos.",
+      "fields": {
+        "tracking_code": {
+          "name": "Código de seguimiento",
+          "description": "El código de seguimiento de Correos."
+        }
+      }
+    },
+    "untrack_parcel": {
+      "name": "Dejar de rastrear paquete",
+      "description": "Deja de rastrear un paquete por su código de seguimiento de Correos.",
+      "fields": {
+        "tracking_code": {
+          "name": "Código de seguimiento",
+          "description": "El código de seguimiento de Correos que se dejará de rastrear."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "parcel_registered": "Se ha registrado un paquete",
+      "parcel_status_changed": "El estado de un paquete ha cambiado",
+      "parcel_delivered": "Se ha entregado un paquete",
+      "parcel_delivery_time_changed": "La hora de entrega prevista de un paquete ha cambiado"
+    }
+  },
+  "entity": {
+    "button": {
+      "refresh": {
+        "name": "Actualizar"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "name": "Entregas"
+      }
+    },
+    "sensor": {
+      "incoming_parcels": {
+        "name": "Paquetes entrantes",
+        "unit_of_measurement": "paquetes"
+      },
+      "next_delivery": {
+        "name": "Próxima entrega"
+      },
+      "delivered_parcels": {
+        "name": "Paquetes entregados",
+        "unit_of_measurement": "paquetes"
+      },
+      "last_update": {
+        "name": "Última actualización correcta"
+      },
+      "parcel": {
+        "name": "Paquete {barcode}"
+      }
+    }
+  }
+}
