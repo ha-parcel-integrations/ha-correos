@@ -11,9 +11,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.correos import parcels as parcels_module
 from custom_components.correos.const import (
+    CAPABILITIES,
     CONF_DELIVERED_FILTER_AMOUNT,
     CONF_DELIVERED_FILTER_TYPE,
     DOMAIN,
+    KNOWN_CAPABILITIES,
     ParcelStatus,
 )
 from custom_components.correos.parcels import (
@@ -244,6 +246,17 @@ def test_normalize_pickup_parcel():
     assert parcel["status"] == ParcelStatus.AT_PICKUP_POINT
     assert parcel["pickup"] is True
     assert parcel["pickup_point"] == "OFICINA MADRID CENTRAL"
+
+
+def test_capabilities_are_known_values():
+    """A typo here would silently misreport this carrier on the docs site."""
+    assert CAPABILITIES <= KNOWN_CAPABILITIES
+
+
+def test_capabilities_match_the_no_window_no_weight_gap():
+    """CAPABILITIES must agree with test_normalize_delivered_parcel /
+    test_normalize_pickup_parcel / test_normalize_history_is_opt_in."""
+    assert CAPABILITIES == {"pickup_point", "url", "history"}
 
 
 def test_normalize_pending_placeholder():

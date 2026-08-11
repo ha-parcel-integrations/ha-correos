@@ -50,6 +50,8 @@ them as best-effort until a real ES parcel confirms them (open items flagged
 - **`weight`/`dimensions` deliberately `None`** — the envelope exposes them but
   their units are unconfirmed, and a wrong-unit value is worse than none. Wire
   them via `format_dimensions()` once a real parcel pins the units down.
+  Reflected in `const.py`'s `CAPABILITIES` (feeds the docs site's comparison
+  table) — keep the two in agreement if that ever changes.
 - **`sender` is `None`**; **`receiver`** is best-effort. Unmapped status →
   `unknown` + one-shot warning.
 

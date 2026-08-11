@@ -28,6 +28,21 @@ class ParcelStatus(StrEnum):
 
 PLATFORMS = [Platform.BUTTON, Platform.CALENDAR, Platform.SENSOR]
 
+# Every optional key the parcel contract defines. CAPABILITIES below must be a
+# subset of this — it exists so a typo in CAPABILITIES fails a test instead of
+# silently dropping this carrier off a table on the docs site.
+KNOWN_CAPABILITIES = frozenset(
+    {"weight", "dimensions", "delivery_window", "pickup_point", "url", "history"}
+)
+
+# Which optional contract fields this carrier's API actually populates — feeds
+# the comparison table on the docs site. Keep in lockstep with
+# normalize_parcel() in parcels.py: everything not listed here comes back as a
+# literal None there. Correos' consumer trace carries no delivery-window
+# estimate and weight/dimension units are unconfirmed, but it does name the
+# pickup office and support the opt-in event history.
+CAPABILITIES = frozenset({"pickup_point", "url", "history"})
+
 # Correos exposes a keyless consumer traceability service — no API key, no
 # header, no bot wall; the tracking code alone keys the lookup.
 #
