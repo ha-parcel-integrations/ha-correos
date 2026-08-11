@@ -39,6 +39,3 @@ ENV/
 
 # Claude Code (local)
 .claude/
-
-
-# Per-carrier working notes (local-only)
