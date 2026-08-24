@@ -5,11 +5,12 @@ an ``error`` block (``codError == "0"`` on success) and an ``eventos`` list that
 runs **oldest → newest**. Each event splits its timestamp across ``fecEvento``
 (``DD/MM/YYYY``) and ``horEvento`` (``HH:MM:SS``) in Europe/Madrid time.
 
-NOTE: the endpoint and the ``codError`` envelope were verified live, but this
-*success* shape (the ``eventos`` fields and the event codes) is **reconstructed**
-from the 2021 community integration ``rikman122/homeassistant-correos_spain``
-and is unverified against a real parcel. When a real ES parcel arrives, this is
-the one module to correct — see TODO.md.
+NOTE: the endpoint, the ``codError`` envelope and the *success* shape (the
+``eventos`` fields, event codes, ``peso``/dimensions) are confirmed against a
+real ES parcel captured 2026-08-24 — a mailbox-oversized item that went
+Admitido → Clasificado → En reparto → failed attempt → held at an office →
+Entregado. Events carry no per-event office field; the pickup office name
+lives on the envelope's own ``nom_codired``.
 """
 from __future__ import annotations
 
@@ -38,7 +39,6 @@ def event(cod_evento: str, timestamp: str, resumen: str) -> dict:
         "codEvento": cod_evento,
         "fecEvento": fecha,
         "horEvento": hora,
-        "unidad": "CTA MADRID",
         "desTextoResumen": resumen,
         "desTextoAmpliado": resumen,
     }
@@ -60,7 +60,7 @@ def delivered_sample(code: str = DELIVERED_CODE) -> dict:
             event("A090000V", "2026-04-27T23:03:58Z", "Admitido"),
             event("P040000V", "2026-04-28T15:52:17Z", "Clasificado"),
             event("H020000V", "2026-04-29T08:46:00Z", "En reparto"),
-            event("I010000V", "2026-04-29T13:12:42Z", "Entregado"),
+            event("I01H210V", "2026-04-29T13:12:42Z", "Entregado"),
         ],
     }
 
@@ -74,10 +74,26 @@ def active_sample(code: str = ACTIVE_CODE) -> dict:
     return sample
 
 
-def pickup_sample(code: str = ACTIVE_CODE) -> dict:
-    """A parcel waiting for collection at a Correos office."""
+def problem_sample(code: str = ACTIVE_CODE) -> dict:
+    """A parcel whose latest event is a failed delivery attempt."""
     sample = active_sample(code)
-    pickup = event("L010000V", "2026-04-29T09:30:00Z", "En oficina")
-    pickup["unidad"] = "OFICINA MADRID CENTRAL"
+    attempt = event(
+        "H010930R",
+        "2026-04-29T09:15:00Z",
+        "Realizado intento de entrega",
+    )
+    sample["eventos"] = sample["eventos"][:-1] + [attempt]
+    return sample
+
+
+def pickup_sample(code: str = ACTIVE_CODE) -> dict:
+    """A parcel waiting for collection at a Correos office.
+
+    The office name lives on the envelope's ``nom_codired``, not on the event
+    — confirmed by a real capture.
+    """
+    sample = active_sample(code)
+    pickup = event("H01I350V", "2026-04-29T09:30:00Z", "A disposición del destinatario")
+    sample["nom_codired"] = "OFICINA MADRID CENTRAL"
     sample["eventos"] = sample["eventos"][:-1] + [pickup]
     return sample

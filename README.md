@@ -10,17 +10,16 @@ A custom Home Assistant integration that tracks your [Correos](https://www.corre
 
 Part of the [ha-parcel-integrations](https://github.com/ha-parcel-integrations) family: it publishes the same canonical parcel format, statuses and events as the other carrier integrations, so it plugs straight into the [Parcel Aggregator](https://github.com/ha-parcel-integrations/ha-parcel-aggregator) and cross-carrier automations.
 
-> ### ⚠️ Early release — the mapping is reconstructed, not yet confirmed
+> ### ℹ️ Happy path confirmed against a real parcel
 >
 > The endpoint is live and keyless, and unknown or not-yet-scanned numbers are
-> handled correctly. What is **not yet confirmed against a real parcel** is the
-> success payload: the event fields and the status-code catalogue are
-> reconstructed from an older community integration, and only the six happy-path
-> status codes are mapped so far. Anything unmapped reports **`unknown`** (never
-> a wrong status) and logs a one-shot warning with a ready-made issue link —
-> please [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml)
-> so the mapping can be completed. Weight and dimensions are withheld until their
-> units are confirmed.
+> handled correctly. The success payload — event fields, status codes, weight
+> and dimensions — has been confirmed against a real Spanish parcel, including
+> a failed delivery attempt and a pickup-office hold. A status code outside
+> that confirmed set still reports **`unknown`** (never a wrong status) and
+> logs a one-shot warning with a ready-made issue link — please
+> [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml)
+> so the mapping can keep growing.
 
 ## Contents
 
@@ -116,9 +115,10 @@ The `status` field is the carrier-agnostic enum shared by the whole integration 
 | `out_for_delivery` | With the courier today (*en reparto*) |
 | `at_pickup_point` | Waiting for you at a Correos office |
 | `delivered` | Delivered (*entregado*) |
+| `problem` | A delivery attempt failed (*realizado intento de entrega*) |
 | `unknown` | Not yet scanned, or a status we have not mapped yet |
 
-The carrier's own Spanish text is always available as `raw_status`. The shared enum also defines `returning` and `problem`; no verified Correos event code maps to those yet, so an unmapped status surfaces as `unknown` and asks you to [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml) — that is how the map grows.
+The carrier's own Spanish text is always available as `raw_status`. The shared enum also defines `returning`; no verified Correos event code maps to a genuine return-to-sender yet, so an unmapped status surfaces as `unknown` and asks you to [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml) — that is how the map grows.
 
 ## Events
 

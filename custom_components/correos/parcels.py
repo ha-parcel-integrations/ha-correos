@@ -10,8 +10,7 @@ The carrier-specific parts are :data:`_STATUS_MAP`, :func:`event_datetime`,
 :func:`build_history` and :func:`normalize_parcel` (the Correos ``localizador``
 field lookups). Everything else — the sort contract, the delivered filter, the
 one-shot warning for unmapped statuses — is suite-wide machinery and should be
-left alone. Remaining ``TODO(carrier)`` markers flag the bits still unverified
-against a real parcel (the pickup event code and the ``peso``/dimensions units).
+left alone.
 """
 from __future__ import annotations
 
@@ -47,14 +46,15 @@ NEW_ISSUE_URL = (
 
 # Correos event codes (``codEvento``) → canonical ParcelStatus. The same codes
 # appear on both the parcel's latest event and every history entry, so this one
-# map serves both. Codes are ``[A-Z0-9]{7}V``-shaped.
+# map serves both.
 #
-# The first six are the happy path, taken from the working 2021 community
-# integration ``rikman122/homeassistant-correos_spain`` (verified codes). The
-# pickup code is a *plausible reconstruction* and marked as such — Correos parks
-# undelivered parcels in a *oficina* / *Lista de Correos* (hence the
-# ``num_dias_lista`` field), but the exact code is unconfirmed until a real
-# parcel shows one. No verified return/exception codes yet: prefer mapping too
+# The first block is the happy path taken from the working 2021 community
+# integration ``rikman122/homeassistant-correos_spain`` — plausible but never
+# independently confirmed. The second block is confirmed against a real ES
+# parcel captured 2026-08-24 (a mailbox-oversized item: failed delivery
+# attempt → held at an office → collected); note its codes are *not* uniformly
+# ``[A-Z0-9]{7}V``-shaped like the first block — the failed-attempt code ends
+# in ``R``. No verified genuine return-to-sender code yet: prefer mapping too
 # little over mapping wrongly — an unmapped code surfaces as ``unknown`` plus a
 # one-shot warning that asks the user to report it, which is how the map grows.
 _STATUS_MAP: dict[str, ParcelStatus] = {
@@ -63,40 +63,33 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "P040000V": ParcelStatus.IN_TRANSIT,        # Clasificado
     "G01L010V": ParcelStatus.IN_TRANSIT,        # En unidad de reparto
     "H020000V": ParcelStatus.OUT_FOR_DELIVERY,  # En reparto
-    "I010000V": ParcelStatus.DELIVERED,         # Entregado
-    # TODO(carrier): confirm against a real parcel held at an office.
-    "L010000V": ParcelStatus.AT_PICKUP_POINT,   # En oficina / Lista de Correos
+    "I010000V": ParcelStatus.DELIVERED,         # Entregado (community-integration guess)
+    "L010000V": ParcelStatus.AT_PICKUP_POINT,   # En oficina / Lista de Correos (community-integration guess)
+    # --- Confirmed against a real parcel, 2026-08-24 ---
+    "H010930R": ParcelStatus.PROBLEM,           # Realizado intento de entrega (failed delivery attempt)
+    "H01I350V": ParcelStatus.AT_PICKUP_POINT,   # A disposición del destinatario (ready for collection)
+    "I01H210V": ParcelStatus.DELIVERED,         # Entregado
 }
 
 # Status codes we have already warned about, so each unmapped one is logged
 # only once per HA session instead of on every poll.
 _unmapped_statuses_logged: set[str] = set()
 
-# ``peso``/``largo``/``alto``/``ancho`` appear in the envelope, but their UNITS
-# (grams vs kg, cm vs mm) are unconfirmed, so ``weight`` / ``dimensions`` stay
-# ``None`` rather than publish a wrong-unit value (see TODO.md). The first real
-# parcel that carries them logs once — an open question we want a tester to
-# answer so we can wire them up. See NEW_ISSUE_URL.
-_DIMENSION_KEYS = ("peso", "largo", "alto", "ancho")
-_dimension_fields_logged = False
 
+def _parse_measurement(value: Any) -> float | None:
+    """Parse a Correos ``peso``/``largo``/``ancho``/``alto`` string field.
 
-def _note_dimension_fields(raw: dict) -> None:
-    """One-shot: flag weight/size fields whose units we have not confirmed."""
-    global _dimension_fields_logged
-    if _dimension_fields_logged:
-        return
-    present = sorted(k for k in _DIMENSION_KEYS if raw.get(k) not in (None, ""))
-    if not present:
-        return
-    _dimension_fields_logged = True
-    _LOGGER.warning(
-        "Correos payload carries weight/size fields whose units we have not "
-        "confirmed yet (%s), so weight and dimensions are left empty. Please "
-        "help us confirm the units — a diagnostics file is ideal: %s",
-        present,
-        NEW_ISSUE_URL,
-    )
+    Confirmed grams (``peso``) and centimetres (``largo``/``ancho``/``alto``)
+    on a real capture 2026-08-24 (``peso: 380`` against a 24×22×13 cm parcel
+    too large for a mailbox slot). Absent/empty on parcels the envelope never
+    populated them for.
+    """
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _warn_unmapped_status(code: str) -> None:
@@ -285,7 +278,6 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     # ``codEnvio`` is the envelope's own tracking number; fall back to the code
     # the coordinator asked for (it injects ``trackingNumber`` on the pending
     # placeholder for a not-yet-scanned parcel).
-    _note_dimension_fields(raw)
     barcode = raw.get("codEnvio") or raw.get("trackingNumber")
 
     # Correos' ``eventos`` run oldest → newest, so the parcel's current state is
@@ -306,6 +298,10 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         moment = event_datetime(latest)
         delivered_at = moment.isoformat() if moment is not None else None
 
+    # ``peso`` is grams; the contract wants kilograms.
+    weight_grams = _parse_measurement(raw.get("peso"))
+    weight = weight_grams / 1000 if weight_grams is not None else None
+
     return {
         "carrier": "Correos",
         "barcode": barcode,
@@ -323,15 +319,18 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         "planned_from": None,
         "planned_to": None,
         "pickup": at_pickup,
-        # When held for collection, the ``unidad`` names the office.
-        "pickup_point": (latest.get("unidad") if at_pickup and latest else None),
+        # When held for collection, the envelope's ``nom_codired`` names the
+        # office (e.g. "MADRID SUC 37. LA ELIPA") — confirmed 2026-08-24.
+        # Events themselves carry no per-event office field despite the
+        # community-integration guess this replaces.
+        "pickup_point": (raw.get("nom_codired") or None) if at_pickup else None,
         "url": tracking_url(barcode),
-        # TODO(carrier): the envelope exposes ``peso`` and ``largo``/``alto``/
-        # ``ancho``, but their units (grams vs kg, cm vs mm) are unconfirmed —
-        # publishing a wrong-unit value is worse than none, so they stay None
-        # until a real parcel pins them down. Then map via format_dimensions().
-        "weight": None,
-        "dimensions": None,
+        "weight": weight,
+        "dimensions": format_dimensions(
+            _parse_measurement(raw.get("largo")),
+            _parse_measurement(raw.get("ancho")),
+            _parse_measurement(raw.get("alto")),
+        ),
         "history": build_history(events) if include_history else None,
         "raw": raw,
     }

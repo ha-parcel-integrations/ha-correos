@@ -39,19 +39,22 @@ here.
 
 ## Carrier-specific decisions (integration only)
 
-**Status: unverified against a real parcel** — the success payload shape and status
-map are reconstructed from a dormant community integration (see `carrier-research/correos/api/`); treat
-them as best-effort until a real ES parcel confirms them (open items flagged
-`TODO(carrier)`).
+**Status: happy path confirmed against a real parcel (2026-08-24)** — a
+mailbox-oversized item (Admitido → Clasificado → En reparto → failed attempt →
+held at an office → Entregado) confirmed the event fields, `peso` (grams) /
+`largo`-`ancho`-`alto` (cm) units, and that the pickup office name lives on the
+envelope's `nom_codired`, not on the event (the original community-integration
+guess assumed the latter). See `carrier-research/correos/api/`. Still no
+verified genuine return-to-sender code — an unmapped status keeps reporting
+`unknown` + one-shot warning.
 
 - **No ETA** — `planned_from`/`planned_to` always `None`, so the next-delivery
   sensor and calendar stay inert and `correos_parcel_delivery_time_changed` never
   fires (the machinery stays for suite parity, exercised white-box).
-- **`weight`/`dimensions` deliberately `None`** — the envelope exposes them but
-  their units are unconfirmed, and a wrong-unit value is worse than none. Wire
-  them via `format_dimensions()` once a real parcel pins the units down.
-  Reflected in `const.py`'s `CAPABILITIES` (feeds the docs site's comparison
-  table) — keep the two in agreement if that ever changes.
+- **`weight`/`dimensions` wired** via `format_dimensions()` — `peso` is grams
+  (÷1000 for the kg contract), `largo`/`ancho`/`alto` are centimetres, both
+  confirmed live. Reflected in `const.py`'s `CAPABILITIES` (feeds the docs
+  site's comparison table) — keep the two in agreement if that ever changes.
 - **`sender` is `None`**; **`receiver`** is best-effort. Unmapped status →
   `unknown` + one-shot warning.
 

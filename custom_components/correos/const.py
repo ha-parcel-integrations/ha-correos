@@ -39,9 +39,9 @@ KNOWN_CAPABILITIES = frozenset(
 # the comparison table on the docs site. Keep in lockstep with
 # normalize_parcel() in parcels.py: everything not listed here comes back as a
 # literal None there. Correos' consumer trace carries no delivery-window
-# estimate and weight/dimension units are unconfirmed, but it does name the
-# pickup office and support the opt-in event history.
-CAPABILITIES = frozenset({"pickup_point", "url", "history"})
+# estimate, but it does name the pickup office, report weight/dimensions and
+# support the opt-in event history.
+CAPABILITIES = frozenset({"pickup_point", "url", "history", "weight", "dimensions"})
 
 # Correos exposes a keyless consumer traceability service — no API key, no
 # header, no bot wall; the tracking code alone keys the lookup.
@@ -60,9 +60,10 @@ CAPABILITIES = frozenset({"pickup_point", "url", "history"})
 # revisit ``--interval fixed`` if throttling shows up.
 #
 # The endpoint and envelope were verified live 2026-07-25; the *success* payload
-# shape (the ``eventos`` fields, ``peso``/dimensions) is reconstructed from the
-# 2021 community integration ``rikman122/homeassistant-correos_spain`` and is
-# still unverified against a real parcel — see the research doc and TODO.md.
+# shape was reconstructed from the 2021 community integration
+# ``rikman122/homeassistant-correos_spain`` and confirmed against a real ES
+# parcel 2026-08-24 (a mailbox-oversized item — failed delivery attempt, held
+# at an office, then collected) — see the research doc.
 TRACKING_API_URL = (
     "https://localizador.correos.es/canonico/eventos_envio_servicio/"
     "{tracking_code}?codAplicacion=60&codCanal=3&codIdioma=ES&indUltEvento=N"

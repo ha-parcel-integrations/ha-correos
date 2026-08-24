@@ -30,7 +30,13 @@ from custom_components.correos.parcels import (
     to_iso_timestamp,
 )
 
-from .payloads import active_sample, delivered_sample, event, pickup_sample
+from .payloads import (
+    active_sample,
+    delivered_sample,
+    event,
+    pickup_sample,
+    problem_sample,
+)
 
 # ---------------------------------------------------------------------------
 # map_parcel_status / map_event_status
@@ -47,6 +53,9 @@ from .payloads import active_sample, delivered_sample, event, pickup_sample
         ("H020000V", ParcelStatus.OUT_FOR_DELIVERY),
         ("L010000V", ParcelStatus.AT_PICKUP_POINT),
         ("I010000V", ParcelStatus.DELIVERED),
+        ("H010930R", ParcelStatus.PROBLEM),
+        ("H01I350V", ParcelStatus.AT_PICKUP_POINT),
+        ("I01H210V", ParcelStatus.DELIVERED),
     ],
 )
 def test_map_parcel_status_known(code, expected):
@@ -77,24 +86,11 @@ def test_unmapped_status_warns_only_once(caplog):
     assert "issues/new" in caplog.text
 
 
-def test_dimension_fields_warn_once_about_unconfirmed_units(caplog):
-    """When a payload carries weight/size fields we log once (units are an open
-    question) — keys only, with an issue link."""
-    parcels_module._dimension_fields_logged = False
-    raw = {"codEnvio": "PK123", "eventos": [], "peso": "1500", "largo": "30"}
-    normalize_parcel(raw)
-    normalize_parcel(raw)
-    assert caplog.text.count("units we have not") == 1
-    assert "peso" in caplog.text and "largo" in caplog.text
-    assert "1500" not in caplog.text  # keys only, never values
-    assert "issues/new" in caplog.text
-
-
-def test_dimension_fields_silent_when_absent(caplog):
-    """A payload without weight/size fields logs nothing."""
-    parcels_module._dimension_fields_logged = False
-    normalize_parcel({"codEnvio": "PK123", "eventos": []})
-    assert "units we have not" not in caplog.text
+def test_parse_measurement_handles_absent_and_malformed():
+    assert parcels_module._parse_measurement("380") == 380.0
+    assert parcels_module._parse_measurement(None) is None
+    assert parcels_module._parse_measurement("") is None
+    assert parcels_module._parse_measurement("not-a-number") is None
 
 
 # ---------------------------------------------------------------------------
@@ -219,10 +215,14 @@ def test_normalize_delivered_parcel():
         "https://www.correos.es/es/es/herramientas/localizador/envios/detalle"
         "?tracking-number=PQ9988776655ES"
     )
-    # peso / dimensions are present in the envelope but their units are
-    # unverified, so they stay None until a real parcel confirms them.
-    assert parcel["weight"] is None
-    assert parcel["dimensions"] is None
+    # ``peso`` (grams) / ``largo``-``ancho``-``alto`` (cm) — confirmed units.
+    assert parcel["weight"] == 1.5
+    assert parcel["dimensions"] == {
+        "length": 30,
+        "width": 20,
+        "height": 10,
+        "text": "30 x 20 x 10 cm",
+    }
     assert parcel["history"] is None  # opt-in, default off
 
 
@@ -245,7 +245,17 @@ def test_normalize_pickup_parcel():
     parcel = normalize_parcel(pickup_sample())
     assert parcel["status"] == ParcelStatus.AT_PICKUP_POINT
     assert parcel["pickup"] is True
+    # The office name lives on the envelope's ``nom_codired``, not the event.
     assert parcel["pickup_point"] == "OFICINA MADRID CENTRAL"
+
+
+def test_normalize_failed_delivery_attempt_is_problem():
+    parcel = normalize_parcel(problem_sample())
+    assert parcel["status"] == ParcelStatus.PROBLEM
+    assert parcel["raw_status"] == "Realizado intento de entrega"
+    assert parcel["delivered"] is False
+    assert parcel["pickup"] is False
+    assert parcel["pickup_point"] is None
 
 
 def test_capabilities_are_known_values():
@@ -253,10 +263,10 @@ def test_capabilities_are_known_values():
     assert CAPABILITIES <= KNOWN_CAPABILITIES
 
 
-def test_capabilities_match_the_no_window_no_weight_gap():
+def test_capabilities_match_the_no_window_gap():
     """CAPABILITIES must agree with test_normalize_delivered_parcel /
     test_normalize_pickup_parcel / test_normalize_history_is_opt_in."""
-    assert CAPABILITIES == {"pickup_point", "url", "history"}
+    assert CAPABILITIES == {"pickup_point", "url", "history", "weight", "dimensions"}
 
 
 def test_normalize_pending_placeholder():
