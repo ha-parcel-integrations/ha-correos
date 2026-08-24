@@ -50,13 +50,12 @@ NEW_ISSUE_URL = (
 #
 # The first block is the happy path taken from the working 2021 community
 # integration ``rikman122/homeassistant-correos_spain`` — plausible but never
-# independently confirmed. The second block is confirmed against a real ES
-# parcel captured 2026-08-24 (a mailbox-oversized item: failed delivery
-# attempt → held at an office → collected); note its codes are *not* uniformly
-# ``[A-Z0-9]{7}V``-shaped like the first block — the failed-attempt code ends
-# in ``R``. No verified genuine return-to-sender code yet: prefer mapping too
-# little over mapping wrongly — an unmapped code surfaces as ``unknown`` plus a
-# one-shot warning that asks the user to report it, which is how the map grows.
+# independently confirmed. The second and third blocks are confirmed against
+# real ES parcels captured 2026-08-24; codes are *not* uniformly
+# ``[A-Z0-9]{7}V``-shaped like the first block — an exception code can end in
+# ``R``. Prefer mapping too little over mapping wrongly — an unmapped code
+# surfaces as ``unknown`` plus a one-shot warning that asks the user to report
+# it, which is how the map grows.
 _STATUS_MAP: dict[str, ParcelStatus] = {
     "A010000V": ParcelStatus.REGISTERED,        # Admitido
     "A090000V": ParcelStatus.REGISTERED,        # Pre-registrado / admitido
@@ -69,6 +68,12 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "H010930R": ParcelStatus.PROBLEM,           # Realizado intento de entrega (failed delivery attempt)
     "H01I350V": ParcelStatus.AT_PICKUP_POINT,   # A disposición del destinatario (ready for collection)
     "I01H210V": ParcelStatus.DELIVERED,         # Entregado
+    # --- Confirmed against two more real parcels, 2026-08-24 ---
+    "P101110V": ParcelStatus.IN_TRANSIT,        # En tránsito (left origin logistics center)
+    "P101120V": ParcelStatus.IN_TRANSIT,        # En tránsito (heading to the delivery unit)
+    "P100000V": ParcelStatus.IN_TRANSIT,        # Clasificado (same wording as P040000V)
+    "P090000V": ParcelStatus.IN_TRANSIT,        # Transferido a proveedor externo (handed to an external delivery provider, still in-network)
+    "M01E020R": ParcelStatus.PROBLEM,           # Envío a estacionar: dirección incorrecta (halted for a bad address, pending sender instructions)
 }
 
 # Status codes we have already warned about, so each unmapped one is logged

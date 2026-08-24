@@ -56,6 +56,11 @@ from .payloads import (
         ("H010930R", ParcelStatus.PROBLEM),
         ("H01I350V", ParcelStatus.AT_PICKUP_POINT),
         ("I01H210V", ParcelStatus.DELIVERED),
+        ("P101110V", ParcelStatus.IN_TRANSIT),
+        ("P101120V", ParcelStatus.IN_TRANSIT),
+        ("P100000V", ParcelStatus.IN_TRANSIT),
+        ("P090000V", ParcelStatus.IN_TRANSIT),
+        ("M01E020R", ParcelStatus.PROBLEM),
     ],
 )
 def test_map_parcel_status_known(code, expected):
