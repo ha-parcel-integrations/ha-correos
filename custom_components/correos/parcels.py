@@ -74,6 +74,24 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "P100000V": ParcelStatus.IN_TRANSIT,        # Clasificado (same wording as P040000V)
     "P090000V": ParcelStatus.IN_TRANSIT,        # Transferido a proveedor externo (handed to an external delivery provider, still in-network)
     "M01E020R": ParcelStatus.PROBLEM,           # Envío a estacionar: dirección incorrecta (halted for a bad address, pending sender instructions)
+    # --- Confirmed against user-tracked parcels, 2026-08-28 ---
+    "P110000V": ParcelStatus.IN_TRANSIT,        # Clasificado
+    "O140000V": ParcelStatus.RETURNING,         # Solicitada devolución
+    "H06P010V": ParcelStatus.PROBLEM,           # En proceso de entrega (waiting for the next attempt)
+    "H01I360V": ParcelStatus.IN_TRANSIT,        # Entrega concertada
+    "X010000V": ParcelStatus.REGISTERED,        # Informado
+    "X020000V": ParcelStatus.IN_TRANSIT,        # En ruta a la localidad de destino
+    "X040000V": ParcelStatus.IN_TRANSIT,        # En ruta a la localidad de destino
+    "X060000V": ParcelStatus.IN_TRANSIT,        # En destino
+    "X070000V": ParcelStatus.IN_TRANSIT,        # En destino
+    "X080000V": ParcelStatus.OUT_FOR_DELIVERY,  # En reparto
+    "X090100R": ParcelStatus.PROBLEM,           # Estacionado
+    "X110100V": ParcelStatus.IN_TRANSIT,        # Nuevo reparto
+    "X090060R": ParcelStatus.PROBLEM,           # Estacionado
+    "X380000V": ParcelStatus.AT_PICKUP_POINT,   # Entregado en PUDO
+    "X390000V": ParcelStatus.AT_PICKUP_POINT,   # Disponible en PUDO
+    "X120000V": ParcelStatus.DELIVERED,         # Entregado
+    "X130000R": ParcelStatus.PROBLEM,           # En gestión
 }
 
 # Status codes we have already warned about, so each unmapped one is logged

@@ -113,12 +113,13 @@ The `status` field is the carrier-agnostic enum shared by the whole integration 
 | `registered` | Admitted / received by Correos |
 | `in_transit` | Classified / in the sorting network |
 | `out_for_delivery` | With the courier today (*en reparto*) |
-| `at_pickup_point` | Waiting for you at a Correos office |
+| `at_pickup_point` | Waiting for you at a Correos office or PUDO |
 | `delivered` | Delivered (*entregado*) |
-| `problem` | A delivery attempt failed (*realizado intento de entrega*) |
+| `returning` | A return has been requested (*solicitada devolución*) |
+| `problem` | A delivery attempt failed, a retry is pending, or the shipment is held (*realizado intento de entrega* / *en proceso de entrega* / *estacionado*) |
 | `unknown` | Not yet scanned, or a status we have not mapped yet |
 
-The carrier's own Spanish text is always available as `raw_status`. The shared enum also defines `returning`; no verified Correos event code maps to a genuine return-to-sender yet, so an unmapped status surfaces as `unknown` and asks you to [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml) — that is how the map grows.
+The carrier's own Spanish text is always available as `raw_status`. A status the integration has not mapped yet surfaces as `unknown` and asks you to [report it](https://github.com/ha-parcel-integrations/ha-correos/issues/new?template=unrecognised_status.yml) — that is how the map grows.
 
 ## Events
 
