@@ -55,6 +55,25 @@
               "refresh_interval": "Con qué frecuencia la integración consulta a Correos las actualizaciones de los paquetes. Un intervalo más lento es más suave con la API de Correos; el valor predeterminado de 30 minutos es suficiente para la mayoría de los paquetes."
             }
           }
+        },
+        "menu_options": {
+          "parcels": "Paquetes",
+          "settings": "Ajustes"
+        }
+      },
+      "parcels": {
+        "title": "Paquetes",
+        "data": {
+          "tracking_codes": "Códigos de seguimiento"
+        }
+      },
+      "settings": {
+        "title": "Ajustes",
+        "data": {
+          "delivered_filter_type": "Paquetes entregados: filtrar por",
+          "delivered_filter_amount": "Paquetes entregados: cantidad",
+          "include_history": "Incluir historial de estado",
+          "refresh_interval": "Actualizar cada"
         }
       }
     },
