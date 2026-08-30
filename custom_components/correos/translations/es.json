@@ -45,15 +45,6 @@
             "data_description": {
               "include_history": "Añade un atributo de historial por paquete con cada actualización de estado (marca de tiempo, estado, texto original). Desactivado por defecto."
             }
-          },
-          "polling": {
-            "name": "Sondeo",
-            "data": {
-              "refresh_interval": "Actualizar cada"
-            },
-            "data_description": {
-              "refresh_interval": "Con qué frecuencia la integración consulta a Correos las actualizaciones de los paquetes. «Automático» (el valor predeterminado para instalaciones nuevas) acelera cerca de las entregas previstas y se ralentiza por la noche; un intervalo fijo consulta a ese ritmo constante durante todo el día."
-            }
           }
         },
         "menu_options": {
@@ -72,8 +63,7 @@
         "data": {
           "delivered_filter_type": "Paquetes entregados: filtrar por",
           "delivered_filter_amount": "Paquetes entregados: cantidad",
-          "include_history": "Incluir historial de estado",
-          "refresh_interval": "Actualizar cada"
+          "include_history": "Incluir historial de estado"
         }
       }
     },
@@ -83,16 +73,6 @@
     }
   },
   "selector": {
-    "refresh_interval": {
-      "options": {
-        "auto": "Automático (recomendado)",
-        "15": "15 minutos",
-        "30": "30 minutos",
-        "60": "60 minutos",
-        "120": "120 minutos",
-        "240": "240 minutos"
-      }
-    },
     "delivered_filter_type": {
       "options": {
         "days": "Días",

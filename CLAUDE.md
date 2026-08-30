@@ -61,11 +61,16 @@ verified genuine return-to-sender code — an unmapped status keeps reporting
 ## Options and reloads — account-less model
 
 The options flow is one sectioned form; changes apply without a restart.
-Account-less carriers (this one) use the **update-listener** model (retunes
-`coordinator.update_interval` + `async_request_refresh()`). Account-based carriers
-instead call `async_schedule_reload` with **no** listener (combining the two is
-deprecated, error in HA 2026.12+). The user-tunable poll interval is a deliberate
-HACS divergence (see CONVENTIONS.md).
+Account-less carriers (this one) use the **update-listener** model
+(`async_request_refresh()`, which also lets the coordinator recompute its
+dynamic-polling tier). Account-based carriers instead call
+`async_schedule_reload` with **no** listener (combining the two is deprecated,
+error in HA 2026.12+).
+
+There is no user-facing polling interval — dynamic, status-driven polling is
+unconditional (see `coordinator.py`'s `_hottest_tier_minutes` /
+`_next_update_interval`, mirroring ha-carrier-template's
+`example_carrier/coordinator.py`).
 
 ## Module layout
 

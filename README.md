@@ -86,33 +86,23 @@ Open **Configure** on the integration entry:
 | Parcels | Add / remove | — | Manage the tracked tracking codes. Changes apply immediately, no restart. |
 | Delivered parcels | Filter by / amount | last 7 days | How long delivered parcels stay visible on the delivered sensor. |
 | Parcel history | Include status history | off | Adds a `history` attribute per parcel with each status update. |
-| Polling | Refresh every | Automatic | How often Correos is checked: **Automatic**, or a fixed **15 / 30 / 60 / 120 / 240 minutes**. New hubs default to Automatic; existing hubs keep their current fixed value until changed. Changes apply immediately, no HA restart needed. See [Dynamic polling](#dynamic-polling) below. |
 
-## Dynamic polling
-
-You can set **Refresh every** to **Automatic** instead of a fixed number of
-minutes. Instead of polling Correos at the same rate around the clock, the
-integration adjusts its own cadence to what your tracked parcels are
-actually doing:
+Polling isn't one of these settings: the integration polls on a dynamic,
+status-driven schedule with nothing to configure:
 
 - **Quiet hours** — no polling between 00:00–06:00 local time, aside from one
   catch-up check at each end of that window (around midnight and around 6
   AM), so an overnight update is never missed.
 - **Hot (every 15 minutes)** — while any tracked parcel is out for delivery
   today, starting an hour before its delivery window opens (or immediately if
-  no window is known yet).
+  no window is known yet — this is the fallback that fires in practice for
+  Correos, whose consumer endpoint reports no delivery window at all).
 - **Normal (every 45 minutes)** — for anything else still on its way.
 - **Fully paused** — once every tracked parcel has been delivered, or nothing
   is tracked at all, polling stops until you add a parcel back (adding one
   always triggers an immediate check, regardless of the pause).
 - A small, fixed per-hub offset is added on top, so not every Correos hub out
   there polls at exactly the same second.
-
-This is opt-in for now, but it's expected to become the default — and
-eventually the only — polling behaviour across the parcel-integrations
-suite. If you try Automatic, we'd genuinely like to hear how it goes:
-share your experience in [this
-discussion](https://github.com/orgs/ha-parcel-integrations/discussions/12).
 
 ## Removal
 

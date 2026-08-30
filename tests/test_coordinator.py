@@ -13,12 +13,10 @@ from custom_components.correos.const import (
     CONF_DELIVERED_FILTER_AMOUNT,
     CONF_DELIVERED_FILTER_TYPE,
     CONF_PARCELS,
-    CONF_REFRESH_INTERVAL,
     CONF_TRACKING_CODE,
     DOMAIN,
     HOT_INTERVAL_MINUTES,
     MID_INTERVAL_MINUTES,
-    REFRESH_INTERVAL_AUTO,
     STAGGER_MINUTES,
     ParcelStatus,
 )
@@ -28,8 +26,6 @@ from custom_components.correos.coordinator import (
     _in_quiet_window,
     _next_anchor,
     _next_update_interval,
-    _refresh_interval,
-    _refresh_setting,
     _stagger_minutes,
 )
 
@@ -451,33 +447,10 @@ async def test_losing_the_eta_is_silent(hass):
 
 
 # ---------------------------------------------------------------------------
-# Dynamic polling (dynamic-polling.md Section 2.1, barcode-based) — pure helpers
+# Dynamic polling (Section 2.1, barcode-based) — pure helpers
 # ---------------------------------------------------------------------------
 
 UTC = timezone.utc
-
-
-def _auto_entry_with(parcels: list[dict]) -> MockConfigEntry:
-    return MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_PARCELS: parcels,
-            CONF_DELIVERED_FILTER_TYPE: "parcels",
-            CONF_DELIVERED_FILTER_AMOUNT: 100,
-            CONF_REFRESH_INTERVAL: REFRESH_INTERVAL_AUTO,
-        },
-        unique_id=DOMAIN,
-    )
-
-
-def test_refresh_interval_starts_hot_when_auto():
-    entry = _auto_entry_with([])
-    assert _refresh_interval(entry).total_seconds() == HOT_INTERVAL_MINUTES * 60
-
-
-def test_refresh_setting_passes_through_auto():
-    entry = _auto_entry_with([])
-    assert _refresh_setting(entry) == REFRESH_INTERVAL_AUTO
 
 
 def test_quiet_window_is_midnight_to_six():
@@ -577,8 +550,8 @@ def test_candidate_landing_in_quiet_window_clamps_to_the_midnight_anchor():
 # ---------------------------------------------------------------------------
 
 
-async def test_auto_mode_stops_entirely_with_nothing_tracked(hass):
-    entry = _auto_entry_with([])
+async def test_stops_entirely_with_nothing_tracked(hass):
+    entry = _entry_with([])
     entry.add_to_hass(hass)
     client = AsyncMock()
     coordinator = CorreosCoordinator(hass, client, entry)
@@ -589,8 +562,11 @@ async def test_auto_mode_stops_entirely_with_nothing_tracked(hass):
     assert coordinator.update_interval is None
 
 
-async def test_auto_mode_is_hot_for_an_out_for_delivery_parcel(hass):
-    entry = _auto_entry_with([{CONF_TRACKING_CODE: ACTIVE_CODE}])
+async def test_is_hot_for_an_out_for_delivery_parcel(hass):
+    """Correos never reports ``planned_from``, so this is the fallback that
+    fires in practice: out_for_delivery with no ETA is immediately hot.
+    """
+    entry = _entry_with([{CONF_TRACKING_CODE: ACTIVE_CODE}])
     entry.add_to_hass(hass)
     client = AsyncMock()
     client.async_get_parcel.return_value = active_sample()
@@ -602,8 +578,8 @@ async def test_auto_mode_is_hot_for_an_out_for_delivery_parcel(hass):
     assert coordinator.update_interval is not None
 
 
-async def test_auto_mode_stops_once_everything_delivered(hass):
-    entry = _auto_entry_with([{CONF_TRACKING_CODE: DELIVERED_CODE}])
+async def test_stops_once_everything_delivered(hass):
+    entry = _entry_with([{CONF_TRACKING_CODE: DELIVERED_CODE}])
     entry.add_to_hass(hass)
     client = AsyncMock()
     client.async_get_parcel.return_value = delivered_sample()
@@ -613,24 +589,3 @@ async def test_auto_mode_stops_once_everything_delivered(hass):
 
     assert coordinator.current_tier_minutes is None
     assert coordinator.update_interval is None
-
-
-async def test_fixed_mode_keeps_configured_interval(hass):
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_PARCELS: [],
-            CONF_DELIVERED_FILTER_TYPE: "parcels",
-            CONF_DELIVERED_FILTER_AMOUNT: 100,
-            CONF_REFRESH_INTERVAL: 60,
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-    client = AsyncMock()
-    coordinator = CorreosCoordinator(hass, client, entry)
-
-    await coordinator._async_update_data()
-
-    assert coordinator.current_tier_minutes is None
-    assert coordinator.update_interval == timedelta(minutes=60)
