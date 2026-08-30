@@ -26,8 +26,10 @@ from .const import (
     DEFAULT_DELIVERED_FILTER_AMOUNT,
     DEFAULT_DELIVERED_FILTER_TYPE,
     DEFAULT_INCLUDE_HISTORY,
+    DEFAULT_NEW_REFRESH_INTERVAL,
     DEFAULT_REFRESH_INTERVAL,
     DOMAIN,
+    REFRESH_INTERVAL_AUTO,
     REFRESH_INTERVAL_OPTIONS,
 )
 
@@ -72,7 +74,7 @@ def _interval_selector() -> selector.SelectSelector:
     """Return the refresh-interval dropdown selector (options translated via strings)."""
     return selector.SelectSelector(
         selector.SelectSelectorConfig(
-            options=[str(m) for m in REFRESH_INTERVAL_OPTIONS],
+            options=[REFRESH_INTERVAL_AUTO] + [str(m) for m in REFRESH_INTERVAL_OPTIONS],
             translation_key=CONF_REFRESH_INTERVAL,
             mode=selector.SelectSelectorMode.DROPDOWN,
         )
@@ -115,7 +117,9 @@ class CorreosConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PARCELS: [],
                 CONF_DELIVERED_FILTER_TYPE: DEFAULT_DELIVERED_FILTER_TYPE,
                 CONF_DELIVERED_FILTER_AMOUNT: DEFAULT_DELIVERED_FILTER_AMOUNT,
-                CONF_REFRESH_INTERVAL: DEFAULT_REFRESH_INTERVAL,
+                # New entries default to dynamic polling (dynamic-polling.md
+                # Section 5.2). Existing entries are never migrated.
+                CONF_REFRESH_INTERVAL: DEFAULT_NEW_REFRESH_INTERVAL,
                 CONF_INCLUDE_HISTORY: DEFAULT_INCLUDE_HISTORY,
             },
         )
@@ -194,7 +198,11 @@ class CorreosOptionsFlowHandler(OptionsFlow):
                         user_input[CONF_DELIVERED_FILTER_AMOUNT]
                     ),
                     CONF_INCLUDE_HISTORY: bool(user_input[CONF_INCLUDE_HISTORY]),
-                    CONF_REFRESH_INTERVAL: int(user_input[CONF_REFRESH_INTERVAL]),
+                    CONF_REFRESH_INTERVAL: (
+                        REFRESH_INTERVAL_AUTO
+                        if user_input[CONF_REFRESH_INTERVAL] == REFRESH_INTERVAL_AUTO
+                        else int(user_input[CONF_REFRESH_INTERVAL])
+                    ),
                 },
             )
 

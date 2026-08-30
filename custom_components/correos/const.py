@@ -99,7 +99,29 @@ DEFAULT_DELIVERED_FILTER_AMOUNT = 7
 # cannot dial it down to something that gets them blocked.
 CONF_REFRESH_INTERVAL = "refresh_interval"
 REFRESH_INTERVAL_OPTIONS = (15, 30, 60, 120, 240)
-DEFAULT_REFRESH_INTERVAL = 30
+DEFAULT_REFRESH_INTERVAL = 30  # minutes — default for entries that predate "auto"
+
+# "auto" switches the coordinator to dynamic, status-driven polling instead of
+# a fixed cadence (dynamic-polling.md Section 2.1). A newly created entry
+# defaults to it; an existing entry keeps its numeric value until the user
+# opts in via the options flow.
+REFRESH_INTERVAL_AUTO = "auto"
+DEFAULT_NEW_REFRESH_INTERVAL = REFRESH_INTERVAL_AUTO
+
+# Dynamic polling (dynamic-polling.md Section 2): no polling 00:00-06:00
+# local time except the two daily anchors; during the day the cadence tiers
+# on the hottest status among tracked, not-yet-delivered parcels — hot when a
+# not-yet-delivered parcel is out_for_delivery within HOT_LOOKAHEAD_HOURS of
+# its planned_from (or immediately if planned_from is missing), mid
+# otherwise. Nothing tracked, or everything delivered, stops polling
+# entirely. STAGGER_MINUTES adds a small, stable per-install offset so
+# installs don't all poll on the same second.
+QUIET_WINDOW_START_HOUR = 0
+QUIET_WINDOW_END_HOUR = 6
+HOT_INTERVAL_MINUTES = 15
+MID_INTERVAL_MINUTES = 45
+HOT_LOOKAHEAD_HOURS = 1
+STAGGER_MINUTES = 7
 
 # Per-parcel status history is opt-in and off by default, identical across the
 # suite. Keep it off by default even when — as here — the timeline arrives in
