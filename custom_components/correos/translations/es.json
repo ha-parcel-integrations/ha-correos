@@ -126,6 +126,10 @@
         "name": "Paquetes entrantes",
         "unit_of_measurement": "paquetes"
       },
+      "awaiting_pickup": {
+        "name": "Listo para recoger",
+        "unit_of_measurement": "paquetes"
+      },
       "next_delivery": {
         "name": "Próxima entrega"
       },
