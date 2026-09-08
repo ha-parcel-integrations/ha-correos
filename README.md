@@ -1,6 +1,7 @@
 # Correos Parcel Tracker
 
 [![Release](https://img.shields.io/github/v/release/ha-parcel-integrations/ha-correos.svg)](https://github.com/ha-parcel-integrations/ha-correos/releases)
+[![Downloads](https://img.shields.io/github/downloads/ha-parcel-integrations/ha-correos/total.svg)](https://github.com/ha-parcel-integrations/ha-correos/releases)
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
