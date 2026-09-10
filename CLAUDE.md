@@ -27,6 +27,11 @@ you act in one of these areas:
 vocabulary and the split `fecEvento`/`horEvento` timestamps. Do not duplicate them
 here.
 
+**Structure, options flow, dynamic polling and module layout are suite-wide**
+and identical in every carrier — the authoritative spec is
+[`ha-carrier-template/scaffold/CLAUDE.md`](https://github.com/ha-parcel-integrations/ha-carrier-template/blob/main/scaffold/CLAUDE.md).
+This repo follows it exactly.
+
 **Suite-wide tripwires, kept inline on purpose:**
 - **First refresh in `__init__.py`, before `async_forward_entry_setups`** — from
   a forwarded platform HA can't catch `ConfigEntryNotReady` and half-sets-up the
@@ -57,42 +62,6 @@ verified genuine return-to-sender code — an unmapped status keeps reporting
   site's comparison table) — keep the two in agreement if that ever changes.
 - **`sender` is `None`**; **`receiver`** is best-effort. Unmapped status →
   `unknown` + one-shot warning.
-
-## Options and reloads — account-less model
-
-The options flow is one sectioned form; changes apply without a restart.
-Account-less carriers (this one) use the **update-listener** model
-(`async_request_refresh()`, which also lets the coordinator recompute its
-dynamic-polling tier). Account-based carriers instead call
-`async_schedule_reload` with **no** listener (combining the two is deprecated,
-error in HA 2026.12+).
-
-There is no user-facing polling interval — dynamic, status-driven polling is
-unconditional (see `coordinator.py`'s `_hottest_tier_minutes` /
-`_next_update_interval`, mirroring ha-carrier-template's
-`example_carrier/coordinator.py`).
-
-## Module layout
-
-| File | Carrier-specific? |
-|---|---|
-| `api.py` (HTTP client, error types) | **yes** |
-| `const.py` (domain, URLs, `ParcelStatus`, option keys) | partly (URLs) |
-| `parcels.py` (status map, `normalize_parcel`, history, sort, filters — pure, no I/O) | partly (`_STATUS_MAP`, `normalize_parcel`) |
-| `coordinator.py` (fetch, cache, event firing) | mostly not |
-| `config_flow.py` | partly (code validation) |
-| `sensor.py` / `button.py` / `calendar.py` / `device_trigger.py` | no |
-| `diagnostics.py` | partly (`TO_REDACT`) |
-| `services.py` (`track_parcel` / `untrack_parcel`) | no |
-
-`parcels.py` is free of I/O and HA objects so the per-carrier part stays
-unit-testable. Config: `ConfigEntry.runtime_data` (typed, no `hass.data`),
-`PARALLEL_UPDATES = 0`, coordinator takes `config_entry=entry`.
-`aiohttp.ClientError` is caught **per parcel** in the gather loop (one bad parcel
-doesn't fail the poll) but **not** around the whole update (coordinator wraps
-that). Entities: `has_entity_name` + `translation_key`, `icons.json`, translated
-units, `_attr_attribution`, `_unrecorded_attributes` on anything with a parcel
-list or `raw`. Over-redact diagnostics.
 
 ## Running tests
 
