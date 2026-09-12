@@ -30,21 +30,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Correos tracking codes come in several shapes and this regex is deliberately
-# kept generous rather than tightened to one:
-#
-#   * UPU S10 registered items — two letters + 9 digits + ``ES``
-#     (e.g. ``LX123456789ES``, ``RR123456789ES``);
-#   * parcel/Paq codes — a letter prefix (``PQ``, ``PK``, ``CP``, ``DS``…)
-#     followed by digits, sometimes with an ``ES`` suffix.
-#
-# The formats vary enough that a tight pattern would risk false negatives, and
-# this same regex also gates the ``track_parcel`` service and the e-mail-parsing
-# example. A valid code must never be rejected — a bad one simply comes back
-# "not found" on the next poll — so upper-case alphanumeric, 6-30 chars, stays.
-_TRACKING_CODE_RE = re.compile(r"^[A-Z0-9]{6,30}$")
-
-
 def normalize_tracking_code(value: str) -> str:
     """Return the tracking code upper-cased with separators stripped.
 
@@ -56,8 +41,8 @@ def normalize_tracking_code(value: str) -> str:
 
 
 def valid_tracking_code(value: str) -> bool:
-    """Whether ``value`` looks like a Correos tracking code."""
-    return bool(_TRACKING_CODE_RE.match(value))
+    """Accept every non-empty code; Correos's real formats vary too much to gate on a guessed shape."""
+    return bool(value)
 
 
 def _current_parcels(entry: ConfigEntry) -> list[dict[str, str]]:
