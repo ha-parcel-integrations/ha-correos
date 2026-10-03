@@ -1,4 +1,4 @@
-# Correos Parcel Tracker
+# Correos (Express) Parcel Tracker
 
 [![Release](https://img.shields.io/github/v/release/ha-parcel-integrations/ha-correos.svg)](https://github.com/ha-parcel-integrations/ha-correos/releases)
 [![Downloads](https://img.shields.io/github/downloads/ha-parcel-integrations/ha-correos/total.svg)](https://github.com/ha-parcel-integrations/ha-correos/releases)
@@ -7,7 +7,7 @@
 
 > 💬 Questions or feedback? Join the discussion on the [Home Assistant community](https://community.home-assistant.io/t/packages-postnl-dhl-nl-dpd-and-gls-parcel-integration/112433/).
 
-A custom Home Assistant integration that tracks your [Correos](https://www.correos.es) parcels — Spain's national postal operator. No account is needed: you enter the tracking code yourself, just like on the Correos website.
+A custom Home Assistant integration that tracks your [Correos](https://www.correos.es) and [Correos Express](https://www.correosexpress.com) parcels — Spain's national postal operator and its express parcel arm. Correos Express tracking codes go into the same integration. No account is needed: you enter the tracking code yourself, just like on the Correos website.
 
 Part of the [ha-parcel-integrations](https://ha-parcel-integrations.github.io/) family: it publishes the same canonical parcel format, statuses and events as the other carrier integrations, so it plugs straight into the [Parcel Aggregator](https://github.com/ha-parcel-integrations/ha-parcel-aggregator) and cross-carrier automations.
 
