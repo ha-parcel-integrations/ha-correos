@@ -1,4 +1,5 @@
 """Diagnostics support for the Correos parcel tracker integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,13 +21,13 @@ TO_REDACT = {
     "receiver",
     "url",
     # Correos envelope fields (``localizador`` response)
-    "codEnvio",          # the tracking number
-    "nombre_cliente",    # addressee name
-    "numReferencia1",    # customer/order reference numbers
+    "codEnvio",  # the tracking number
+    "nombre_cliente",  # addressee name
+    "numReferencia1",  # customer/order reference numbers
     "numReferencia2",
     "numReferencia3",
-    "observaciones",     # free-text notes; may carry an address
-    "nom_codired",       # named delivery office
+    "observaciones",  # free-text notes; may carry an address
+    "nom_codired",  # named delivery office
     # generic fields that turn up in nested blocks
     "trackingNumber",
     "recipient",

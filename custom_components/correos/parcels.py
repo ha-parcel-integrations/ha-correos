@@ -12,10 +12,11 @@ field lookups). Everything else — the sort contract, the delivered filter, the
 one-shot warning for unmapped statuses — is suite-wide machinery and should be
 left alone.
 """
+
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -57,41 +58,41 @@ NEW_ISSUE_URL = (
 # surfaces as ``unknown`` plus a one-shot warning that asks the user to report
 # it, which is how the map grows.
 _STATUS_MAP: dict[str, ParcelStatus] = {
-    "A010000V": ParcelStatus.REGISTERED,        # Admitido
-    "A090000V": ParcelStatus.REGISTERED,        # Pre-registrado / admitido
-    "P040000V": ParcelStatus.IN_TRANSIT,        # Clasificado
-    "G01L010V": ParcelStatus.IN_TRANSIT,        # En unidad de reparto
+    "A010000V": ParcelStatus.REGISTERED,  # Admitido
+    "A090000V": ParcelStatus.REGISTERED,  # Pre-registrado / admitido
+    "P040000V": ParcelStatus.IN_TRANSIT,  # Clasificado
+    "G01L010V": ParcelStatus.IN_TRANSIT,  # En unidad de reparto
     "H020000V": ParcelStatus.OUT_FOR_DELIVERY,  # En reparto
-    "I010000V": ParcelStatus.DELIVERED,         # Entregado (community-integration guess)
-    "L010000V": ParcelStatus.AT_PICKUP_POINT,   # En oficina / Lista de Correos (community-integration guess)
+    "I010000V": ParcelStatus.DELIVERED,  # Entregado (community-integration guess)
+    "L010000V": ParcelStatus.AT_PICKUP_POINT,  # En oficina / Lista de Correos (community-integration guess)
     # --- Confirmed against a real parcel, 2026-08-24 ---
-    "H010930R": ParcelStatus.PROBLEM,           # Realizado intento de entrega (failed delivery attempt)
-    "H01I350V": ParcelStatus.AT_PICKUP_POINT,   # A disposición del destinatario (ready for collection)
-    "I01H210V": ParcelStatus.DELIVERED,         # Entregado
+    "H010930R": ParcelStatus.PROBLEM,  # Realizado intento de entrega (failed delivery attempt)
+    "H01I350V": ParcelStatus.AT_PICKUP_POINT,  # A disposición del destinatario (ready for collection)
+    "I01H210V": ParcelStatus.DELIVERED,  # Entregado
     # --- Confirmed against two more real parcels, 2026-08-24 ---
-    "P101110V": ParcelStatus.IN_TRANSIT,        # En tránsito (left origin logistics center)
-    "P101120V": ParcelStatus.IN_TRANSIT,        # En tránsito (heading to the delivery unit)
-    "P100000V": ParcelStatus.IN_TRANSIT,        # Clasificado (same wording as P040000V)
-    "P090000V": ParcelStatus.IN_TRANSIT,        # Transferido a proveedor externo (handed to an external delivery provider, still in-network)
-    "M01E020R": ParcelStatus.PROBLEM,           # Envío a estacionar: dirección incorrecta (halted for a bad address, pending sender instructions)
+    "P101110V": ParcelStatus.IN_TRANSIT,  # En tránsito (left origin logistics center)
+    "P101120V": ParcelStatus.IN_TRANSIT,  # En tránsito (heading to the delivery unit)
+    "P100000V": ParcelStatus.IN_TRANSIT,  # Clasificado (same wording as P040000V)
+    "P090000V": ParcelStatus.IN_TRANSIT,  # Transferido a proveedor externo (handed to an external delivery provider, still in-network)
+    "M01E020R": ParcelStatus.PROBLEM,  # Envío a estacionar: dirección incorrecta (halted for a bad address, pending sender instructions)
     # --- Confirmed against user-tracked parcels, 2026-08-28 ---
-    "P110000V": ParcelStatus.IN_TRANSIT,        # Clasificado
-    "O140000V": ParcelStatus.RETURNING,         # Solicitada devolución
-    "H06P010V": ParcelStatus.PROBLEM,           # En proceso de entrega (waiting for the next attempt)
-    "H01I360V": ParcelStatus.IN_TRANSIT,        # Entrega concertada
-    "X010000V": ParcelStatus.REGISTERED,        # Informado
-    "X020000V": ParcelStatus.IN_TRANSIT,        # En ruta a la localidad de destino
-    "X040000V": ParcelStatus.IN_TRANSIT,        # En ruta a la localidad de destino
-    "X060000V": ParcelStatus.IN_TRANSIT,        # En destino
-    "X070000V": ParcelStatus.IN_TRANSIT,        # En destino
+    "P110000V": ParcelStatus.IN_TRANSIT,  # Clasificado
+    "O140000V": ParcelStatus.RETURNING,  # Solicitada devolución
+    "H06P010V": ParcelStatus.PROBLEM,  # En proceso de entrega (waiting for the next attempt)
+    "H01I360V": ParcelStatus.IN_TRANSIT,  # Entrega concertada
+    "X010000V": ParcelStatus.REGISTERED,  # Informado
+    "X020000V": ParcelStatus.IN_TRANSIT,  # En ruta a la localidad de destino
+    "X040000V": ParcelStatus.IN_TRANSIT,  # En ruta a la localidad de destino
+    "X060000V": ParcelStatus.IN_TRANSIT,  # En destino
+    "X070000V": ParcelStatus.IN_TRANSIT,  # En destino
     "X080000V": ParcelStatus.OUT_FOR_DELIVERY,  # En reparto
-    "X090100R": ParcelStatus.PROBLEM,           # Estacionado
-    "X110100V": ParcelStatus.IN_TRANSIT,        # Nuevo reparto
-    "X090060R": ParcelStatus.PROBLEM,           # Estacionado
-    "X380000V": ParcelStatus.AT_PICKUP_POINT,   # Entregado en PUDO
-    "X390000V": ParcelStatus.AT_PICKUP_POINT,   # Disponible en PUDO
-    "X120000V": ParcelStatus.DELIVERED,         # Entregado
-    "X130000R": ParcelStatus.PROBLEM,           # En gestión
+    "X090100R": ParcelStatus.PROBLEM,  # Estacionado
+    "X110100V": ParcelStatus.IN_TRANSIT,  # Nuevo reparto
+    "X090060R": ParcelStatus.PROBLEM,  # Estacionado
+    "X380000V": ParcelStatus.AT_PICKUP_POINT,  # Entregado en PUDO
+    "X390000V": ParcelStatus.AT_PICKUP_POINT,  # Disponible en PUDO
+    "X120000V": ParcelStatus.DELIVERED,  # Entregado
+    "X130000R": ParcelStatus.PROBLEM,  # En gestión
 }
 
 # Status codes we have already warned about, so each unmapped one is logged
@@ -103,7 +104,7 @@ def _parse_measurement(value: Any) -> float | None:
     """Parse a Correos ``peso``/``largo``/``ancho``/``alto`` string field.
 
     Confirmed grams (``peso``) and centimetres (``largo``/``ancho``/``alto``)
-    on a real capture 2026-08-24 (``peso: 380`` against a 24×22×13 cm parcel
+    on a real capture 2026-08-24 (``peso: 380`` against a 24x22x13 cm parcel
     too large for a mailbox slot). Absent/empty on parcels the envelope never
     populated them for.
     """
@@ -168,11 +169,11 @@ def parse_iso(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
-        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(str(value))
     except ValueError:
         return None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
     return parsed
 
 
@@ -188,7 +189,7 @@ def to_iso_timestamp(value: Any) -> str | None:
         return None
     if isinstance(value, (int, float)):
         try:
-            return datetime.fromtimestamp(value / 1000, tz=timezone.utc).isoformat()
+            return datetime.fromtimestamp(value / 1000, tz=UTC).isoformat()
         except (OverflowError, OSError, ValueError):
             return None
     return str(value)
@@ -390,14 +391,12 @@ def apply_delivered_filter(parcels: list[dict], entry: ConfigEntry) -> list[dict
     shows.
     """
     options = entry.options
-    filter_type = options.get(
-        CONF_DELIVERED_FILTER_TYPE, DEFAULT_DELIVERED_FILTER_TYPE
-    )
+    filter_type = options.get(CONF_DELIVERED_FILTER_TYPE, DEFAULT_DELIVERED_FILTER_TYPE)
     amount = int(
         options.get(CONF_DELIVERED_FILTER_AMOUNT, DEFAULT_DELIVERED_FILTER_AMOUNT)
     )
     if filter_type == "days":
-        cutoff = datetime.now(timezone.utc) - timedelta(days=amount)
+        cutoff = datetime.now(UTC) - timedelta(days=amount)
         return [
             parcel
             for parcel in parcels

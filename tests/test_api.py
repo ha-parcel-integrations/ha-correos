@@ -1,14 +1,12 @@
 """Tests for the Correos API client."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
 
-from custom_components.correos.api import (
-    CorreosApiClient,
-    CorreosApiError,
-)
+from custom_components.correos.api import CorreosApiClient, CorreosApiError
 
 CODE = "EXAMPLE123456"
 
@@ -52,9 +50,7 @@ async def test_get_parcel_returns_none_when_not_found():
 
 async def test_get_parcel_accepts_a_bare_object_envelope():
     """Some error bodies come back unwrapped rather than in an array."""
-    client = CorreosApiClient(
-        _session_returning(200, {"error": {"codError": "3"}})
-    )
+    client = CorreosApiClient(_session_returning(200, {"error": {"codError": "3"}}))
     assert await client.async_get_parcel(CODE) is None
 
 

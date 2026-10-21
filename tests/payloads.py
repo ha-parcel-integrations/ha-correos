@@ -12,6 +12,7 @@ Admitido → Clasificado → En reparto → failed attempt → held at an office
 Entregado. Events carry no per-event office field; the pickup office name
 lives on the envelope's own ``nom_codired``.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -30,7 +31,7 @@ def event(cod_evento: str, timestamp: str, resumen: str) -> dict:
     the "malformed event is dropped" path stays exercised.
     """
     try:
-        parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(timestamp)
         fecha = parsed.strftime("%d/%m/%Y")
         hora = parsed.strftime("%H:%M:%S")
     except ValueError:
@@ -82,7 +83,7 @@ def problem_sample(code: str = ACTIVE_CODE) -> dict:
         "2026-04-29T09:15:00Z",
         "Realizado intento de entrega",
     )
-    sample["eventos"] = sample["eventos"][:-1] + [attempt]
+    sample["eventos"] = [*sample["eventos"][:-1], attempt]
     return sample
 
 
@@ -95,5 +96,5 @@ def pickup_sample(code: str = ACTIVE_CODE) -> dict:
     sample = active_sample(code)
     pickup = event("H01I350V", "2026-04-29T09:30:00Z", "A disposición del destinatario")
     sample["nom_codired"] = "OFICINA MADRID CENTRAL"
-    sample["eventos"] = sample["eventos"][:-1] + [pickup]
+    sample["eventos"] = [*sample["eventos"][:-1], pickup]
     return sample
