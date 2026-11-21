@@ -263,7 +263,7 @@ def test_normalize_active_parcel_has_no_window():
     parcel = normalize_parcel(active_sample())
     assert parcel["status"] == ParcelStatus.OUT_FOR_DELIVERY
     assert parcel["delivered"] is False
-    # Correos consumer tracking carries no delivery-window estimate.
+    # The consumer endpoint carries no delivery-window estimate.
     assert parcel["planned_from"] is None
     assert parcel["planned_to"] is None
 

@@ -53,9 +53,18 @@ guess assumed the latter). See `carrier-research/correos/api/`. Still no
 verified genuine return-to-sender code — an unmapped status keeps reporting
 `unknown` + one-shot warning.
 
-- **No ETA** — `planned_from`/`planned_to` always `None`, so the next-delivery
-  sensor and calendar stay inert and `correos_parcel_delivery_time_changed` never
-  fires (the machinery stays for suite parity, exercised white-box).
+- **No ETA** — `planned_from`/`planned_to` always `None` (built through the
+  shared `planned_window`/`planned_for_status` helpers with the Madrid zone), so
+  the next-delivery sensor and calendar stay inert and
+  `correos_parcel_delivery_time_changed` never fires (the machinery stays for
+  suite parity, exercised white-box).
+- **`pickup`** is `is_pickup(None, status, event statuses)`: true once any event
+  mapped to `AT_PICKUP_POINT`, and it stays true after collection. There is no
+  structured route field, so it is only known on arrival and the
+  `en_route_to_pickup_point` sensor (pickup parcels not yet at the point, not
+  returning) reads 0 until a parcel is seen heading to an office (pending).
+  `pickup_point` is the envelope's `nom_codired` when `pickup`; whether that field still names the office after
+  `Entregado` is unconfirmed on a real collected parcel.
 - **`weight`/`dimensions` wired** via `format_dimensions()` — `peso` is grams
   (÷1000 for the kg contract), `largo`/`ancho`/`alto` are centimetres, both
   confirmed live. Reflected in `const.py`'s `CAPABILITIES` (feeds the docs

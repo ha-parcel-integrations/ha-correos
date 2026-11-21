@@ -7,6 +7,7 @@ from custom_components.correos.const import ParcelStatus
 from custom_components.correos.sensor import (
     CorreosAwaitingPickupSensor,
     CorreosDeliveredParcelsSensor,
+    CorreosEnRouteToPickupPointSensor,
     CorreosIncomingParcelsSensor,
     CorreosLastUpdateSensor,
     CorreosNextDeliverySensor,
@@ -68,6 +69,28 @@ def test_awaiting_pickup_zero_when_no_parcels():
     assert sensor.extra_state_attributes["parcels"] == []
 
 
+def test_en_route_counts_only_pickup_parcels_not_yet_at_the_point():
+    en_route = _parcel("ENROUTE", ParcelStatus.IN_TRANSIT, pickup=True)
+    returning = _parcel("RET", ParcelStatus.RETURNING, pickup=True)
+    at_point = _parcel("AT", ParcelStatus.AT_PICKUP_POINT, pickup=True)
+    delivered = _parcel("DONE", ParcelStatus.DELIVERED, pickup=True)
+    home = _parcel("HOME", ParcelStatus.IN_TRANSIT, pickup=False)
+    sensor = CorreosEnRouteToPickupPointSensor(
+        _coordinator([en_route, returning, at_point, home], delivered=[delivered]),
+        _entry(),
+    )
+    assert sensor.native_value == 1
+    assert [p["barcode"] for p in sensor.extra_state_attributes["parcels"]] == [
+        "ENROUTE"
+    ]
+
+
+def test_en_route_zero_when_no_parcels():
+    sensor = CorreosEnRouteToPickupPointSensor(_coordinator([]), _entry())
+    assert sensor.native_value == 0
+    assert sensor.extra_state_attributes["parcels"] == []
+
+
 def test_parcel_sensor_status_and_attributes():
     parcel = _parcel("A", status=ParcelStatus.OUT_FOR_DELIVERY)
     sensor = CorreosParcelSensor(_coordinator([parcel]), _entry(), "A")
@@ -84,13 +107,24 @@ def test_parcel_sensor_missing_barcode():
 def test_next_delivery_picks_earliest():
     coordinator = _coordinator(
         [
-            _parcel("A", planned_from="2026-05-02T10:00:00Z"),
-            _parcel("B", planned_from="2026-05-01T10:00:00Z"),
+            _parcel("A", planned_from="2099-05-02T10:00:00Z"),
+            _parcel("B", planned_from="2099-05-01T10:00:00Z"),
         ]
     )
     sensor = CorreosNextDeliverySensor(coordinator, _entry())
-    assert sensor.native_value == datetime(2026, 5, 1, 10, 0, tzinfo=UTC)
+    assert sensor.native_value == datetime(2099, 5, 1, 10, 0, tzinfo=UTC)
     assert sensor.extra_state_attributes["barcode"] == "B"
+
+
+def test_next_delivery_skips_a_window_that_has_ended():
+    coordinator = _coordinator(
+        [
+            {**_parcel("OLD", planned_from="2000-05-01T10:00:00Z"), "planned_to": None},
+            _parcel("NEW", planned_from="2099-05-01T10:00:00Z"),
+        ]
+    )
+    sensor = CorreosNextDeliverySensor(coordinator, _entry())
+    assert sensor.extra_state_attributes["barcode"] == "NEW"
 
 
 def test_next_delivery_none_without_moments():
@@ -103,7 +137,7 @@ def test_next_delivery_skips_unparseable_moment():
     coordinator = _coordinator(
         [
             _parcel("A", planned_from="not-a-date"),
-            _parcel("B", planned_from="2026-05-01T10:00:00Z"),
+            _parcel("B", planned_from="2099-05-01T10:00:00Z"),
         ]
     )
     sensor = CorreosNextDeliverySensor(coordinator, _entry())

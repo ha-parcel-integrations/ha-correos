@@ -121,6 +121,7 @@ Standard HA removal applies: **Settings → Devices & Services → Correos → �
 | `sensor.correos_incoming_parcels` | Number of active tracked parcels, full list under the `parcels` attribute |
 | `sensor.correos_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
 | `sensor.correos_next_delivery` | Earliest expected delivery moment across all active parcels (stays empty — Correos exposes no ETA) |
+| `sensor.correos_en_route_to_pickup_point` | Incoming parcels heading to a pickup point but not there yet (reads 0 until Correos reports a pickup route) |
 | `sensor.correos_awaiting_pickup` | Incoming parcels that are ready to collect at a pickup point |
 | `sensor.correos_delivered_parcels` | Recently delivered parcels (see the retention option) |
 | `sensor.correos_last_successful_update` | Diagnostic: when Correos was last polled successfully |
