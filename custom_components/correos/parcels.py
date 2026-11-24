@@ -447,6 +447,7 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         # ``nombre_cliente`` is the addressee on the account's own trace.
         # Best-effort until a real payload confirms which party it names.
         "receiver": raw.get("nombre_cliente") or None,
+        "contents": None,
         "status": status,
         "raw_status": raw_status,
         "delivered": delivered,

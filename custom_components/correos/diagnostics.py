@@ -19,6 +19,7 @@ TO_REDACT = {
     "barcode",
     "sender",
     "receiver",
+    "contents",
     "url",
     # Correos envelope fields (``localizador`` response)
     "codEnvio",  # the tracking number
