@@ -14,7 +14,7 @@ import logging
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -147,6 +147,10 @@ class CorreosCoordinator(DataUpdateCoordinator[list[dict]]):
         self._client = client
         self.contents_store = ContentsStore(hass, entry.entry_id)
         self.delivered: list[dict] = []
+        # id(parcel) -> the code the contents store is keyed on. A parcel
+        # without a barcode, or whose response carries another number, cannot
+        # be matched by its own fields.
+        self._parcel_codes: dict[int, str] = {}
         # tracking_code -> last successful raw payload, so a transient fetch
         # failure or a not-found blip keeps the parcel visible instead of
         # dropping its sensor. Lives for the integration's lifetime (resets on
@@ -182,6 +186,17 @@ class CorreosCoordinator(DataUpdateCoordinator[list[dict]]):
         if user_value is not None:
             parcel["contents"] = user_value
         return parcel
+
+    @callback
+    def async_reapply_contents(self) -> None:
+        """Re-read the contents store into the published parcels, without a fetch."""
+        for parcel in [*(self.data or []), *self.delivered]:
+            parcel["contents"] = None
+            self._apply_contents(
+                parcel,
+                self._parcel_codes.get(id(parcel), parcel.get("barcode") or ""),
+            )
+        self.async_update_listeners()
 
     @property
     def current_tier_minutes(self) -> int | None:
@@ -310,6 +325,7 @@ class CorreosCoordinator(DataUpdateCoordinator[list[dict]]):
             )
             for code, raw in raws_by_code.items()
         ]
+        self._parcel_codes = {id(parcel): code for code, parcel in entries}
         active = [parcel for _, parcel in entries if not parcel["delivered"]]
         delivered = [parcel for _, parcel in entries if parcel["delivered"]]
         # Rebuilt fresh from this cycle's data — a code whose payload just
