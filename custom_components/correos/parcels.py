@@ -64,12 +64,13 @@ _STATUS_MAP: dict[str, ParcelStatus] = {
     "P040000V": ParcelStatus.IN_TRANSIT,  # Clasificado
     "G01L010V": ParcelStatus.IN_TRANSIT,  # En unidad de reparto
     "H020000V": ParcelStatus.OUT_FOR_DELIVERY,  # En reparto
-    "I010000V": ParcelStatus.DELIVERED,  # Entregado (community-integration guess)
+    "I010000V": ParcelStatus.DELIVERED,  # Entregado (confirmed on a real parcel, 2026-09-29)
     "L010000V": ParcelStatus.AT_PICKUP_POINT,  # En oficina / Lista de Correos (community-integration guess)
     # --- Confirmed against a real parcel, 2026-08-24 ---
     "H010930R": ParcelStatus.PROBLEM,  # Realizado intento de entrega (failed delivery attempt)
     "H01I350V": ParcelStatus.AT_PICKUP_POINT,  # A disposición del destinatario (ready for collection)
     "I01H210V": ParcelStatus.DELIVERED,  # Entregado
+    "H01R390V": ParcelStatus.PROBLEM,  # Realizado intento de entrega: destinatario ausente, nuevo intento (confirmed on a real parcel, 2026-09-28)
     # --- Confirmed against two more real parcels, 2026-08-24 ---
     "P101110V": ParcelStatus.IN_TRANSIT,  # En tránsito (left origin logistics center)
     "P101120V": ParcelStatus.IN_TRANSIT,  # En tránsito (heading to the delivery unit)

@@ -55,6 +55,7 @@ from .payloads import (
         ("L010000V", ParcelStatus.AT_PICKUP_POINT),
         ("I010000V", ParcelStatus.DELIVERED),
         ("H010930R", ParcelStatus.PROBLEM),
+        ("H01R390V", ParcelStatus.PROBLEM),
         ("H01I350V", ParcelStatus.AT_PICKUP_POINT),
         ("I01H210V", ParcelStatus.DELIVERED),
         ("P101110V", ParcelStatus.IN_TRANSIT),
